@@ -1,0 +1,19 @@
+<div class="alert alert-warning">
+  <p> <%= "Warning: This job will add a controlled value Language of Material language to all Resource records currently lacking a controlled value language." %>
+</div>
+<br/>
+<p><%= "What string should be matched in the note." %></p>
+
+<%= form.label_and_textfield("note_string") %>
+
+<p><%= "Select what the new language should be." %></p>
+
+<%= form.label_and_select("language", form.possible_options_for("language", true)) %>
+
+<% if user_can?('delete_archival_record') %>
+  <%= form.label_and_boolean "delete_note" %>
+<% end %>
+
+<% if user_can?('administer_system') %>
+  <%= form.label_and_boolean "all_repos" %>
+<% end %>

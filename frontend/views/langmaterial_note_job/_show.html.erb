@@ -1,0 +1,24 @@
+<% unless job['note_string'].nil? %>
+  <div class="form-group">
+    <label class="col-sm-3 control-label"><%= I18n.t("langmaterial_note_job.note_string")  %></label>
+    <div class="col-sm-9 controls label-only"><%= job['note_string'] %></div>
+  </div>
+<% end %>
+<% unless job['language'].nil? %>
+  <div class="form-group">
+    <label class="col-sm-3 control-label"><%= I18n.t("langmaterial_note_job.language")  %></label>
+    <div class="col-sm-9 controls label-only"><%= I18n.t("enumerations.language_iso639_2.#{job['language']}", :default => job['language']) %></div>
+  </div>
+<% end %>
+<% if user_can?('delete_archival_record') %>
+  <div class="form-group">
+    <label class="col-sm-3 control-label"><%= I18n.t("langmaterial_note_job.delete_note")  %></label>
+    <div class="col-sm-9 controls label-only"><%= job['delete_note'] %></div>
+  </div>
+<% end %>
+<% if user_can?('administer_system') %>
+  <div class="form-group">
+    <label class="col-sm-3 control-label"><%= I18n.t("langmaterial_note_job.all_repos")  %></label>
+    <div class="col-sm-9 controls label-only"><%= job['all_repos'] %></div>
+  </div>
+<% end %>

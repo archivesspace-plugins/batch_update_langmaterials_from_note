@@ -1,0 +1,11 @@
+en:
+  langmaterial_note_job:
+    _singular: Update Language of Material from Note Job
+    _plural: Update Language of Material from Note Jobs
+    note_string: Language of Material note string
+    language: New language
+    all_repos: Globally run update for all repositories?
+    delete_note: Delete Language of Material note after update?
+  job:
+    types:
+      langmaterial_note_job: Update Language of Material from Note Job
