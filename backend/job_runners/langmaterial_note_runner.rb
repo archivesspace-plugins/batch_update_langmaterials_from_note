@@ -31,34 +31,18 @@ class LangMaterialNoteRunner < JobRunner
 
       DB.open do |db|
 
-        def query_string(params)
-          "SELECT
-              id, repo_id
-          FROM
-              as_126.resource
-          WHERE
-              id NOT IN (SELECT
-                      resource_id
-                  FROM
-                      as_126.lang_material
-                  WHERE
-                      id IN (SELECT
-                              lang_material_id
-                          FROM
-                              as_126.language_and_script)
-                          AND resource_id IS NOT NULL)
-                  #{params[:all_repos] == true ? "" : "AND repo_id = #{@job.repo_id}"};"
-        end
-
         unless params[:language].nil? && params[:note_string]
           lang_enum = db[:enumeration].filter(:name => 'language_iso639_2').select(:id)
           new_lang = db[:enumeration_value].filter(:value => params[:language], :enumeration_id => lang_enum ).select(:id)
-          no_lang = db.fetch(query_string(params))
-          no_lang.each do |resource|
-            lang_material_note = db[:lang_material].filter(:resource_id => resource[:id]).select(:id)
+          l_and_s = db[:language_and_script].select(:lang_material_id)
+          lang_mat = db[:lang_material].select(:resource_id).where(id: l_and_s, resource_id: !nil)
+          resources_no_lang = params[:all_repos] == true ? db[:resource].exclude(id: lang_mat) : db[:resource].exclude(id: lang_mat).where(repo_id: @job.repo_id)
+          resources_no_lang.each do |resource|
+            lang_material_note = db[:lang_material].where(:resource_id => resource[:id]).all
             lang_material_note.each do |note|
-              note_blob = db[:note].filter(:lang_material_id => lang_material_note).get([:id, :notes])
+              note_blob = db[:note].filter(:lang_material_id => note[:id]).get([:id, :notes])
               if JSON.parse(note_blob[1])['content'][0] == params[:note_string]
+                
                 # Create lang_material record attached to resource
                 language_record = db[:lang_material].insert(
                                       :json_schema_version => 1,
@@ -81,7 +65,6 @@ class LangMaterialNoteRunner < JobRunner
                 uri = "/repositories/#{resource[:repo_id]}/resources/#{resource[:id]}"
                 modified_records << uri
                 if params[:delete_note] == true
-                  @job.write_output("Deleting Language of Material note with content '#{params[:note_string]}' and associated subrecords.")
                   # Safely delete the note
                   Note.handle_delete(note_blob[0])
                   # Delete now empty langmaterial record
@@ -103,6 +86,7 @@ class LangMaterialNoteRunner < JobRunner
       if modified_records.empty?
         @job.write_output("All done, no records modified.")
       else
+        params[:delete_note] == true ? @job.write_output("Deleting Language of Material note with content '#{params[:note_string]}' and associated subrecords.") : ''
         @job.write_output("#{modified_records.uniq.count} records modified.")
         @job.write_output("All done, logging modified records.")
       end
